@@ -141,13 +141,21 @@ struct ggml_backend_registry {
 #endif
 
 #ifdef GGML_USE_OPENCL
+    if (getenv("GGML_DISABLE_OPENCL") == nullptr) {
         register_backend(ggml_backend_opencl_reg());
+    } else {
+        GGML_LOG_DEBUG("OpenCL backend disabled by GGML_DISABLE_OPENCL environment variable\n");
+    }
 #endif
 #ifdef GGML_USE_ZENDNN
         register_backend(ggml_backend_zendnn_reg());
 #endif
 #ifdef GGML_USE_HEXAGON
+    if (getenv("GGML_DISABLE_HEXAGON") == nullptr) {
         register_backend(ggml_backend_hexagon_reg());
+    } else {
+        GGML_LOG_DEBUG("Hexagon backend disabled by GGML_DISABLE_HEXAGON environment variable\n");
+    }
 #endif
 #ifdef GGML_USE_CANN
         register_backend(ggml_backend_cann_reg());
