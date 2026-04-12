@@ -1950,6 +1950,18 @@ ggml_tensor * llm_graph_context::build_attn_mha(
         ggml_soft_max_add_sinks(kq, sinks);
         cb(kq, "kq_soft_max", il);
 
+        // Dequantize quantized V cache to F32 for standard attention path.
+        // Must happen BEFORE transpose: ggml_cont on a transposed quantized
+        // tensor would create ne[0]=n_head_kv which may not divide by block
+        // size.  Flash attention handles quantized V natively via its fused
+        // kernel, so this cast only applies to the non-flash path.
+        // Note: the CPU DUP kernel only supports quantized → F32 (not F16),
+        // so we dequantize to F32 here.
+        if (ggml_is_quantized(v->type)) {
+            v = ggml_cast(ctx0, v, GGML_TYPE_F32);
+            cb(v, "v_f32", il);
+        }
+
         if (!v_trans) {
             // note: avoid this branch
             v = ggml_cont(ctx0, ggml_transpose(ctx0, v));

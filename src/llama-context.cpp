@@ -345,12 +345,6 @@ llama_context::llama_context(
         }
 
         sched_reserve();
-
-        if (!cparams.flash_attn) {
-            if (ggml_is_quantized(params.type_v)) {
-                throw std::runtime_error("quantized V cache was requested, but this requires Flash Attention");
-            }
-        }
     }
 
     // Initialize the full vocabulary token ids for backend samplers.
@@ -2962,11 +2956,6 @@ llama_context * llama_init_from_model(
                 return nullptr;
             }
         }
-    }
-
-    if (ggml_is_quantized(params.type_v) && params.flash_attn_type == LLAMA_FLASH_ATTN_TYPE_DISABLED) {
-        LLAMA_LOG_ERROR("%s: V cache quantization requires flash_attn\n", __func__);
-        return nullptr;
     }
 
     if (params.pooling_type != LLAMA_POOLING_TYPE_UNSPECIFIED &&
